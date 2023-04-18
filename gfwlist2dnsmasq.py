@@ -13,11 +13,11 @@ import shutil
 import ssl
 import argparse
  
-mydnsip = '127.0.0.1'
-mydnsport = '5353'
-ipsetname = 'gfwlist'
+mydnsip = '8.8.8.8'
+mydnsport = '53'
+ipsetname = 'gfw'
 customGFWListFile = 'customGfwList.txt'
-finalRulesFile = './dnsmasq_list.conf'
+finalRulesFile = 'gfw.conf'
 
 # the url of gfwlist
 baseurl = 'https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt'
