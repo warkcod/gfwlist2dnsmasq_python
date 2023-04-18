@@ -11,6 +11,7 @@ import datetime
 import base64
 import shutil
 import ssl
+import argparse
  
 mydnsip = '127.0.0.1'
 mydnsport = '5353'
@@ -25,9 +26,6 @@ baseurl = 'https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt'
 tmpfile = '/tmp/gfwlisttmp'
 # do not write to router internal flash directly
 outfile = '/tmp/dnsmasq_list.conf'
-
-
-
 
 def update_domains_from_file(tmpfile, outputfs, mydnsip, mydnsport, ipsetname, domainlist):
     comment_pattern = '^\!|\[|^@@|^\d+\.\d+\.\d+\.\d+'
@@ -59,11 +57,30 @@ def update_domains_from_file(tmpfile, outputfs, mydnsip, mydnsport, ipsetname, d
 
     tfs.close()
 
-print('fetching list...')
-if hasattr(ssl, '_create_unverified_context'):
-	ssl._create_default_https_context = ssl._create_unverified_context
-
-content = urllib.request.urlopen(baseurl, timeout=15).read()
+parser = argparse.ArgumentParser(description='Generate gfwList file for DNSMasq from gfwlist.txt')
+parser.add_argument('--input_file', help='The local gfwlist.txt input file.')
+parser.add_argument('--verbose', action='store_true', help='Print verbose output.')
+parser.add_argument('--version', action='version', version='%(prog)s 2.0')
+try:
+    args = parser.parse_args()
+    print('Input file:', args.input_file)
+    if args.verbose:
+        print('Verbose output is on.')
+    else:
+        print('Verbose output is off.')
+except argparse.ArgumentError:
+    parser.print_usage()
+    exit()
+    
+if args.input_file:
+    print("Reading from local input file...")
+    content = open(args.input_file, 'r').read()
+else:
+    print('fetching list...')
+    if hasattr(ssl, '_create_unverified_context'):
+         ssl._create_default_https_context = ssl._create_unverified_context
+    content = urllib.request.urlopen(baseurl, timeout=15).read() 
+    
 decode_content = base64.b64decode(content).decode('utf-8')
  
 # write the decoded content to file then read line by line
