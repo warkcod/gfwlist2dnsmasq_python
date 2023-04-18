@@ -15,42 +15,50 @@ import ssl
 mydnsip = '127.0.0.1'
 mydnsport = '5353'
 ipsetname = 'gfwlist'
-# Extra Domain;
-EX_DOMAIN=[ \
-'google.com', \
-'google.com.hk', \
-'google.com.tw', \
-'google.com.sg', \
-'google.co.jp', \
-'google.co.kr', \
-'blogspot.com', \
-'blogspot.sg', \
-'blogspot.hk', \
-'blogspot.jp', \
-'blogspot.kr', \
-'gvt1.com', \
-'gvt2.com', \
-'gvt3.com', \
-'1e100.net', \
-'blogspot.tw' \
-]
- 
+customGFWListFile = 'customGfwList.txt'
+finalRulesFile = './dnsmasq_list.conf'
+
 # the url of gfwlist
 baseurl = 'https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt'
 # match comments/title/whitelist/ip address
-comment_pattern = '^\!|\[|^@@|^\d+\.\d+\.\d+\.\d+'
-domain_pattern = '(?:[\w\-]*\*[\w\-]*\.)?([\w\-]+\.[\w\.\-]+)[\/\*]*'
-ip_pattern = re.compile(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b')
+
 tmpfile = '/tmp/gfwlisttmp'
 # do not write to router internal flash directly
 outfile = '/tmp/dnsmasq_list.conf'
-rulesfile = './dnsmasq_list.conf'
- 
-fs =  open(outfile, 'w')
-fs.write('# gfw list ipset rules for dnsmasq\n')
-fs.write('# updated on ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + '\n')
-fs.write('#\n')
- 
+
+
+
+
+def update_domains_from_file(tmpfile, outputfs, mydnsip, mydnsport, ipsetname, domainlist):
+    comment_pattern = '^\!|\[|^@@|^\d+\.\d+\.\d+\.\d+'
+    domain_pattern = '(?:[\w\-]*\*[\w\-]*\.)?([\w\-]+\.[\w\.\-]+)[\/\*]*'
+    ip_pattern = re.compile(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b')
+
+    tfs = open(tmpfile, 'r')
+
+    for line in tfs.readlines():	
+        if re.findall(comment_pattern, line):
+            print('this is a comment line: ' + line)
+            #fs.write('#' + line)
+        else:
+            domain = re.findall(domain_pattern, line)
+            if domain:
+                try:
+                    found = domainlist.index(domain[0])
+                    print(domain[0] + ' exists.')
+                except ValueError:
+                    if ip_pattern.match(domain[0]):
+                        print('skipping ip: ' + domain[0])
+                        continue
+                    print('saving ' + domain[0])
+                    domainlist.append(domain[0])
+                    outputfs.write('server=/%s/%s#%s\n'%(domain[0],mydnsip,mydnsport))
+                    outputfs.write('ipset=/%s/%s\n'%(domain[0],ipsetname))
+            else:
+                print('no valid domain in this line: ' + line)
+
+    tfs.close()
+
 print('fetching list...')
 if hasattr(ssl, '_create_unverified_context'):
 	ssl._create_default_https_context = ssl._create_unverified_context
@@ -62,45 +70,31 @@ decode_content = base64.b64decode(content).decode('utf-8')
 tfs = open(tmpfile, 'w')
 tfs.write(decode_content)
 tfs.close()
-tfs = open(tmpfile, 'r')
- 
+
 print('page content fetched, analysis...')
- 
+
+
+fs =  open(outfile, 'w')
+fs.write('# gfw list ipset rules for dnsmasq\n')
+fs.write('# updated on ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + '\n')
+fs.write('#\n')
+
 # remember all blocked domains, in case of duplicate records
 domainlist = []
 
- 
-for line in tfs.readlines():	
-	if re.findall(comment_pattern, line):
-		print('this is a comment line: ' + line)
-		#fs.write('#' + line)
-	else:
-		domain = re.findall(domain_pattern, line)
-		if domain:
-			try:
-				found = domainlist.index(domain[0])
-				print(domain[0] + ' exists.')
-			except ValueError:
-				if ip_pattern.match(domain[0]):
-					print('skipping ip: ' + domain[0])
-					continue
-				print('saving ' + domain[0])
-				domainlist.append(domain[0])
-				fs.write('server=/%s/%s#%s\n'%(domain[0],mydnsip,mydnsport))
-				fs.write('ipset=/%s/%s\n'%(domain[0],ipsetname))
-		else:
-			print('no valid domain in this line: ' + line)
-					
-tfs.close()	
+update_domains_from_file(tmpfile, fs, mydnsip, mydnsport, ipsetname, domainlist)
 
-for each in EX_DOMAIN:
-	fs.write('server=/%s/%s#%s\n'%(each,mydnsip,mydnsport))
-	fs.write('ipset=/%s/%s\n'%(each,ipsetname))
+#add custom gfw list
+if os.path.exists(customGFWListFile) and os.path.getsize(customGFWListFile) > 0:
+     fs.write('# CUSTOM_GFW_LIST:\n')
+     update_domains_from_file(customGFWListFile, fs, mydnsip, mydnsport, ipsetname, domainlist)
+else:
+    print('File does not exist or is empty. %s', customGFWListFile)
 
 print('write extra domain done')
 
 fs.close();
 print('moving generated file to dnsmasq directory')
-shutil.move(outfile, rulesfile)
+shutil.move(outfile, finalRulesFile)
  
 print('done!')
