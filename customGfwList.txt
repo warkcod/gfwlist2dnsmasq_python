@@ -43,4 +43,11 @@ tx.me
 usercontent.dev
 #end telegram
 
+#for tiktok
+tiktokcdn.com
+tiktokv.com
+tiktokcdn-us.com
+ttwstatic.com
+#end for tiktok
+
 
