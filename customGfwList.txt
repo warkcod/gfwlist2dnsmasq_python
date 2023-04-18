@@ -1,0 +1,27 @@
+# Add custom domain list which need to be added in to gfwlist here
+# One domain for each line
+# Do not worry about dublicate domains, it will be removed automatically
+mtproto.co
+
+#for openai
+openai.com
+sentry.io
+azureedge.net
+openaiapi-site.azureedge.net
+google-analytics.com
+auth0.com
+deepl.com
+sentry.io
+cloudflare.com
+ai.com
+
+#
+17yongai.com
+hostloc.com
+hostloc.net
+
+#for ca gov
+ca.gov
+
+
+
