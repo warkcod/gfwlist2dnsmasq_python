@@ -23,5 +23,24 @@ hostloc.net
 #for ca gov
 ca.gov
 
+#for telegram
+comments.app
+contest.com
+graph.org
+quiz.directory
+t.me
+tdesktop.com
+telega.one
+telegra.ph
+telegram.dog
+telegram.me
+telegram.org
+telegram.space
+telegramdownload.com
+telesco.pe
+tg.dev
+tx.me
+usercontent.dev
+#end telegram
 
 
