@@ -1,6 +1,10 @@
-### Notification: This repo will not be maintained anymore unless critical bug is found. Please use shell script version instead:
+New feature in new version: Apr 19, 2023
+-----
+1. Support using local gfwlist.txt instead of getting from github which might be blocked.
+2. Remove EX_DOMAIN, add this in customGFWListFile, it is very simple, just add one line for each domain.
+Useage:
+usage: gfwlist2dnsmasq.py [-h] [--input_file INPUT_FILE] [--verbose] [--version]
 
-https://github.com/cokebar/gfwlist2dnsmasq
 
 gfwlist2dnsmasq
 =================
